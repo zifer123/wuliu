@@ -33,8 +33,20 @@
         /* 判断融云 */
         var rong = api.require('rongCloud2');
         rong.init(function(ret, err) {
-            if (ret.status == 'error')
-                api.toast({ msg: err.code });
+            if (ret.status == 'error') {
+                api.alert({
+                    title: 'title',
+                    msg: '成功'
+                }, function (ret, err) {
+                });
+            } else {
+                api.alert({
+                    title: 'title',
+                    msg: '失败s'
+                }, function (ret, err) {
+                });
+            }
+
         });
     };
 </script>
