@@ -89,7 +89,7 @@
         </p>
     </div>
     <div>
-        <p class="signIn">
+        <p class="signIn" onclick="fnLogin()">
             登录
         </p>
         <p class="signUp">
@@ -106,5 +106,12 @@
     apiready = function(){
 
     };
+
+    function fnLogin() {
+        api.openWin({
+            name: 'main',
+            url: './main.html'
+        });
+    }
 </script>
 </html>

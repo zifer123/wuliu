@@ -29,6 +29,13 @@
                 url: './html/main.html'
             });
         }
+
+        /* 判断融云 */
+        var rong = api.require('rongCloud2');
+        rong.init(function(ret, err) {
+            if (ret.status == 'error')
+                api.toast({ msg: err.code });
+        });
     };
 </script>
 </html>
