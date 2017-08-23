@@ -23,7 +23,7 @@
 <script type="text/javascript">
     apiready = function(){
         /* 判断是否注册或登录 */
-        var isLogin=false;
+        var isLogin=$api.getStorage("userId");
         if(!isLogin) {
             /* 登录注册 */
             api.openWin({

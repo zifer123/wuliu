@@ -105,18 +105,41 @@
 <script type="text/javascript" src="../script/SHA1.js"></script>
 <script type="text/javascript">
     apiready = function(){
-
+        fnInitModel();
     };
+
+    /* 初始化mcm应用信息，设置一次生效，为全局函数！ */
+    function fnInitModel() {
+        var model=api.require("model");
+        model.config({
+            appKey: '29762068-5EBD-FAE9-B326-0540B9F8E95E',
+            host: 'https://d.apicloud.com'
+        });
+    }
+
+    function fnOpenMain() {
+        api.openWin({
+            name: 'main',
+            url: './main.html',
+            pageParam: {name: 'pageparamname'}
+        });
+    }
 
     function fnLogin() {
         var username=$api.val(document.getElementById("username"));
         var password=$api.val(document.getElementById("password"));
+        api.showProgress({
+            title: '努力加载中...',
+            text: '先喝杯茶...',
+            modal: true
+        });
         var user = api.require("user");
         user.login({
             username: username,
             password: password
         }, function(ret, err){
-           if(ret.error) {
+           if(err) {
+               api.hideProgress();
                api.alert({
                    title: '温馨提示',
                    msg: '账号或密码错误'
@@ -124,6 +147,11 @@
 
                });
            }else {
+               api.hideProgress();
+               api.alert({
+                   title: 'title',
+                   msg: ret.userId
+               });
                $api.setStorage('userId', ret.userId);
                /* 成功之后用Id查询token */
                var model = api.require("model");
@@ -131,6 +159,10 @@
                    class: "user",
                    id: ret.userId
                }, function(ret, err){
+                   api.alert({
+                       title: 'title',
+                       msg: ret
+                   });
                    $api.setStorage('userToken', ret.token);
                    $api.setStorage('username', ret.username);
 
@@ -138,7 +170,7 @@
                        title: '温馨提示',
                        msg: '登录成功'
                    }, function (ret, err) {
-
+                        /*  */
                    });
                });
            }
@@ -186,10 +218,6 @@
                 }
             }
         }, function (ret, err) {
-            api.alert({
-                title: 'asdasdsa',
-                msg: JSON.stringify(ret)
-            });
             callback?callback(ret,username,password):"";
         })
     }
@@ -198,7 +226,7 @@
     function fnIsRegister(ret,username,password) {
         /* 返回的ret有两种结果："" 或json*/
         if(ret) {
-            var model = api.require("model");
+            var model = api.require('model');
             model.insert({
                 class: "user",
                 value: {
@@ -217,7 +245,6 @@
                     });
                 }else {
                     /* 成功之后拿到生成id去融云拿到唯一的token */
-                    ret.id
                     api.alert({
                         title: '温馨提示',
                         msg: '注册成功，点击登录按钮登录'

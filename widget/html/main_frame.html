@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0, minimum-scale=1.0, user-scalable=0, initial-scale=1.0, width=device-width"/>
+    <meta name="format-detection" content="telephone=no, email=no, date=no, address=no">
+    <title>Hello APP</title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <style>
+
+    </style>
+</head>
+<body>
+
+
+<section class="aui-chat">
+    <div class="aui-chat-header">2016年7月13日</div>
+    <div class="aui-chat-item aui-chat-left">
+        <div class="aui-chat-media">
+            <img src="../../image/demo2.png" />
+        </div>
+        <div class="aui-chat-inner">
+            <div class="aui-chat-name">AUI <span class="aui-label aui-label-warning">2.0</span></div>
+            <div class="aui-chat-content">
+                <div class="aui-chat-arrow"></div>
+                Hello AUI 2.0!
+            </div>
+            <div class="aui-chat-status aui-chat-status-refresh">
+                <i class="aui-iconfont aui-icon-correct aui-text-success"></i>
+            </div>
+        </div>
+    </div>
+    <div class="aui-chat-item aui-chat-right">
+        <div class="aui-chat-media">
+            <img src="../../image/liulangnan.png" />
+        </div>
+        <div class="aui-chat-inner">
+            <div class="aui-chat-name">流浪男</div>
+            <div class="aui-chat-content">
+                <div class="aui-chat-arrow"></div>
+                你好！
+            </div>
+            <div class="aui-chat-status">
+                <i class="aui-iconfont aui-icon-info aui-text-danger"></i>
+            </div>
+        </div>
+    </div>
+    <div class="aui-chat-item aui-chat-left">
+        <div class="aui-chat-media">
+            <img src="../../image/demo2.png" />
+        </div>
+        <div class="aui-chat-inner">
+            <div class="aui-chat-name">AUI <span class="aui-label aui-label-warning">2.0</span></div>
+            <div class="aui-chat-content">
+                <div class="aui-chat-arrow"></div>
+                <img src="../../image/l1.png" />
+            </div>
+        </div>
+    </div>
+    <div class="aui-chat-item aui-chat-right">
+        <div class="aui-chat-media">
+            <img src="../../image/liulangnan.png" />
+        </div>
+        <div class="aui-chat-inner">
+            <div class="aui-chat-name">流浪男</div>
+            <div class="aui-chat-content">
+                <div class="aui-chat-arrow"></div>
+                以前拍摄的牛背山星空
+            </div>
+        </div>
+    </div>
+    <div class="aui-chat-item aui-chat-left">
+        <div class="aui-chat-media">
+            <img src="../../image/demo2.png" />
+        </div>
+        <div class="aui-chat-inner">
+            <div class="aui-chat-name">AUI <span class="aui-label aui-label-warning">2.0</span></div>
+            <div class="aui-chat-content">
+                <div class="aui-chat-arrow"></div>
+                <img src="../../image/l2.png" />
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+    /* 监听收到消息 */
+    apiready = function () {
+        api.addEventListener({
+            name: 'getMessage'
+        }, function (ret, err) {
+            var message=ret.value.message;
+            var $auiChat= $api.dom(".aui-chat");
+            $api.append($auiChat, `<div class="aui-chat-item aui-chat-left">
+                <div class="aui-chat-media">
+                    <img src="../../image/demo2.png" />
+                </div>
+                <div class="aui-chat-inner">
+                    <div class="aui-chat-name">AUI <span class="aui-label aui-label-warning">2.0</span></div>
+                    <div class="aui-chat-content">
+                        <div class="aui-chat-arrow"></div>
+                        ${message}
+                    </div>
+
+                </div>
+            </div>`);
+        });
+
+        api.addEventListener({
+            name: 'panelHeightChange'
+        }, function (ret, err) {
+            var panelHeight=ret.value.panelHeight;
+            var h='';
+            if(panelHeight==0) {
+                h=api.winHeight-94;
+            }else {
+                h=api.frameHeight-45;
+            }
+
+            api.setFrameAttr({
+                name: 'main_frame',
+                rect: {
+                    h: h
+                }
+            });
+        });
+
+        api.addEventListener({
+            name: 'sendMsg'
+        }, function (ret, err) {
+            var message=ret.value.message;
+            var $auiChat= $api.dom(".aui-chat");
+            $api.append($auiChat, `<div class="aui-chat-item aui-chat-right">
+                <div class="aui-chat-media">
+                    <img src="../../image/demo2.png" />
+                </div>
+                <div class="aui-chat-inner">
+                    <div class="aui-chat-name">流浪男 <span class="aui-label aui-label-warning">2.0</span></div>
+                    <div class="aui-chat-content">
+                        <div class="aui-chat-arrow"></div>
+                        ${message}
+                    </div>
+
+                </div>
+            </div>`);
+        });
+    }
+</script>
