@@ -23,20 +23,40 @@
 <script type="text/javascript">
     apiready = function(){
         /* 判断是否注册或登录 */
+//        $api.clearStorage();
         var isLogin=$api.getStorage("userId");
         if(!isLogin) {
             /* 登录注册 */
             api.openWin({
                 name: 'login',
-                url: './html/login.html'
+                url: 'login.html'
             });
         }else {
-            api.openWin({
-                name: 'main',
-                url: './html/main.html'
-            });
+//            api.openWin({
+//                name: 'main',
+//                url: 'main.html'
+//            });
+            fnOpenSlidLayout();
         }
 
     };
+
+    /* 侧滑页必须在index.html完成，不然会有问题 */
+    function fnOpenSlidLayout() {
+        api.openSlidLayout({
+            type: 'left',
+            fixedPane: {
+                name: 'my',
+                url: 'widget://html/my.html',
+                bgColor: "#fff"
+            },
+            slidPane: {
+                name: 'main',
+                url: 'widget://html/main.html'
+            }
+        }, function(ret, err) {
+
+        });
+    }
 </script>
 </html>

@@ -148,10 +148,6 @@
                });
            }else {
                api.hideProgress();
-               api.alert({
-                   title: 'title',
-                   msg: ret.userId
-               });
                $api.setStorage('userId', ret.userId);
                /* 成功之后用Id查询token */
                var model = api.require("model");
@@ -159,10 +155,6 @@
                    class: "user",
                    id: ret.userId
                }, function(ret, err){
-                   api.alert({
-                       title: 'title',
-                       msg: ret
-                   });
                    $api.setStorage('userToken', ret.token);
                    $api.setStorage('username', ret.username);
 
@@ -170,7 +162,8 @@
                        title: '温馨提示',
                        msg: '登录成功'
                    }, function (ret, err) {
-                        /*  */
+                        /* 调到首页 */
+                       fnOpenSlidLayout();
                    });
                });
            }
@@ -260,6 +253,23 @@
                 msg: "token获取失败"
             });
         }
+    }
+
+    function fnOpenSlidLayout() {
+        api.openSlidLayout({
+            type: 'left',
+            fixedPane: {
+                name: 'my',
+                url: 'widget://html/my.html',
+                bgColor: "#fff"
+            },
+            slidPane: {
+                name: 'main',
+                url: 'widget://html/main.html'
+            }
+        }, function(ret, err) {
+
+        });
     }
 
 </script>

@@ -5,234 +5,136 @@
     <meta name="viewport" content="maximum-scale=1.0, minimum-scale=1.0, user-scalable=0, initial-scale=1.0, width=device-width"/>
     <meta name="format-detection" content="telephone=no, email=no, date=no, address=no">
     <title>Hello APP</title>
-    <link rel="stylesheet" type="text/css" href="../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
 	<style>
-        header {
-            height: 50px;
-            text-align: center;
+        .tx {
+            width: 38px;
+            border-radius: 50%;
         }
 	</style>
 </head>
 <body>
-<header>
-    <h1>我是头部</h1>
+<header class="aui-bar aui-bar-nav" id="header">
+    <a class="aui-pull-left aui-btn" onclick="fnOpenSlidPane();">
+        <img src="../image/tx0.jpg" class="tx" alt="">
+        <!--32-->
+    </a>
+    <div class="aui-title">消息</div>
+    <a class="aui-pull-right aui-btn">
+        <span class="aui-iconfont aui-icon-plus"></span>
+    </a>
 </header>
+<section></section>
+<footer class="aui-bar aui-bar-tab" id="footer">
+    <div class="aui-bar-tab-item aui-active" tapmode>
+        <i class="aui-iconfont aui-icon-comment"></i>
+        <div class="aui-bar-tab-label">消息</div>
+    </div>
+    <div class="aui-bar-tab-item" tapmode>
+        <div class="aui-badge">99</div>
+        <i class="aui-iconfont aui-icon-my"></i>
+        <div class="aui-bar-tab-label">好友</div>
+    </div>
+    <div class="aui-bar-tab-item" tapmode>
+        <div class="aui-dot"></div>
+        <i class="aui-iconfont aui-icon-gear"></i>
+        <div class="aui-bar-tab-label">设置</div>
+    </div>
+</footer>
 <script type="text/javascript" src="../script/api.js"></script>
 <script type="text/javascript">
-    apiready = function(){
-        fnInitRong2();
-        fnInitChatBox();
-        fnOpenMainFrame();
-    };
+    apiready = function () {
+        var header=$api.byId("header")
+        $api.fixStatusBar(header);
+        var footer= $api.byId('footer');
+        var hh=$api.offset(header).h;// 顶部导航高
+        var fh=$api.offset(footer).h;// 底部导航高
 
-    /* 打开mian_frame */
-    function fnOpenMainFrame() {
+        var rong = api.require('rongCloud2');
+        fnInitRong2(rong);
+        fnOpenMainXiaoxiFrame(hh,fh);
+    }
+
+    function fnOpenMainFrame(hh,fh) {
         api.openFrame({
             name: 'main_frame',
-            url: './main_frame.html',
+            url: 'path',
             rect: {
                 x: 0,
-                y: 50,
+                y: hh,
                 w: "auto",
-                h: api.winHeight-50-44
+                h: api.winHeight-hh-fh
+            },
+            bounces: true
+        });
+    }
+
+    function fnOpenMainXiaoxiFrame(hh,fh) {
+        api.openFrame({
+            name: 'mainXiaoxi_frame',
+            url: './mainXiaoxi_frame.html',
+            rect: {
+                x: 0,
+                y: hh,
+                w: "auto",
+                h: api.winHeight-hh-fh
             },
             pageParam: {name: 'pageparam'},
             bounces: true
         });
     }
 
-    /* 初始化融云 */
-    function fnInitRong2() {
-        /* 来到主页，就证明已经有token值 */
-        var userToken=$api.getStorage("userToken");
-        var rong=api.require('rongCloud2');
+    function fnOpenSlidPane() {
+        api.openSlidPane({
+            type: 'left'
+        });
+    }
+    
+    function fnInitRong2(rong) {
         rong.init(function(ret, err) {
             if (ret.status == 'success') {
 
                 /* 监听消息 */
                 rong.setOnReceiveMessageListener(function(ret, err) {
-//                    api.alert({
-//                        title: 'title',
-//                        msg: JSON.stringify(ret.result.message)
-//                    }, function (ret, err) {
-//
-//                    });
-                    var message=ret.result.message.content.text
-                    if(message) {
-                        api.sendEvent({
-                            name: 'getMessage',
-                            extra: {
-                                message: message
-                            }
+                    var text=ret.result.message.content.text;
+                    var targetId=ret.result.message.targetId;
+                    var type=ret.result.message.objectName;
+                    var receivedTime=ret.result.message.receivedTime;
+
+                    api.alert({
+                        title: 'title',
+                        msg: JSON.stringify(ret.result.message)
+                    });
+                    /* 发送事件 */
+                    api.sendEvent({
+                        name: 'xiaoxiList',
+                        extra: {
+                            text: text,
+                            targetId: targetId,
+                            type: type
+                        }
+                    });
+                });
+
+                /* 获取token */
+                var token=$api.getStorage("userToken");
+                rong.connect({token: token},function(ret, err) {
+                    if (ret.status == 'success') {
+                        api.alert({
+                            title: '融云连接',
+                            msg: "您的ID为"+ret.result.userId
                         });
                     }
                 });
-
-                /* 初始化成功后连接Rong2 */
-                rong.connect(
-                    {
-                        token: userToken
-                    },function(ret, err) {
-                        if (ret.status == 'success') {
-                            api.alert({
-                                title: 'title',
-                                msg: ret.result.userId
-                            }, function (ret, err) {
-
-                            });
-                        }else {
-                            alert("连接失败");
-                        }
-                    }
-                );
             }else {
-
-            }
-
-        });
-    }
-
-    /* 登出 */
-    function fnLoginOut() {
-        api.confirm({
-            title: '温馨提示',
-            msg: '确定注销吗',
-            buttons: ['确定', '取消']
-        }, function (ret, err) {
-            if(ret.buttonIndex==1) {
-                api.openWin({
-                    name: 'login',
-                    url: './login.html'
-                });
-            }
-        });
-    }
-
-    /* 初始化UIChatBox */
-    function fnInitChatBox() {
-        var UIChatBox = api.require('UIChatBox');
-        UIChatBox.open({
-            placeholder: '',
-            maxRows: 4,
-            emotionPath: 'widget://image/emotion',
-            texts: {
-                recordBtn: {
-                    normalTitle: '按住说话',
-                    activeTitle: '松开结束'
-                },
-                sendBtn: {
-                    title: '发送'
-                }
-            },
-            styles: {
-                inputBar: {
-                    borderColor: '#d9d9d9',
-                    bgColor: '#f2f2f2'
-                },
-                inputBox: {
-                    borderColor: '#B3B3B3',
-                    bgColor: '#FFFFFF'
-                },
-                emotionBtn: {
-                    normalImg: 'widget://res/img/chatBox_face1.png'
-                },
-                extrasBtn: {
-                    normalImg: 'widget://image/add2.png'
-                },
-                speechBtn: {
-                    normalImg: 'widget://image/cam1.png'
-                },
-                recordBtn: {
-                    normalBg: '#c4c4c4',
-                    activeBg: '#999999',
-                    color: '#000',
-                    size: 14
-                },
-                indicator: {
-                    target: 'both',
-                    color: '#c4c4c4',
-                    activeColor: '#9e9e9e'
-                },
-                sendBtn: {
-                    titleColor: '#fff',
-                    bg: "#12B7F5",
-                    activeBg: '#46a91e',
-                    titleSize: 14
-                }
-            },
-            extras: {
-                titleSize: 10,
-                titleColor: '#a3a3a3',
-                btns: [{
-                    title: '图片',
-                    normalImg: 'widget://res/img/chatBox_album1.png',
-                    activeImg: 'widget://res/img/chatBox_album2.png'
-                }, {
-                    title: '拍照',
-                    normalImg: 'widget://res/img/chatBox_cam1.png',
-                    activeImg: 'widget://res/img/chatBox_cam2.png'
-                }]
-            }
-        }, function(ret, err) {
-            if(ret) {
-                if (ret.eventType === 'send') {
-                    // 发送消息
-                    fnSendMsg(ret.msg);
-                }
-            }
-        });
-
-        UIChatBox.addEventListener({
-            target: 'recordBtn',
-            name: 'press'
-        }, function(ret, err) {
-            if (ret) {
-                alert(JSON.stringify(ret));
-            } else {
-                alert(JSON.stringify(err));
-            }
-        });
-
-        UIChatBox.addEventListener({
-            target: 'inputBar',
-            name: 'move'
-        }, function(ret, err) {
-            if (ret) {
-                api.sendEvent({
-                    name: 'panelHeightChange',
-                    extra: {
-                        panelHeight: ret.panelHeight
-                    }
-                });
-            } else {
-                alert(JSON.stringify(err));
-            }
-        });
-    }
-
-    /* 发送消息 */
-    function fnSendMsg(msg) {
-        var rong = api.require('rongCloud2');
-        rong.sendTextMessage({
-            conversationType: 'PRIVATE',
-            targetId: '110',
-            text: msg,
-            extra: ''
-        }, function(ret, err) {
-            if (ret.status == 'prepare')
-                api.toast({ msg: JSON.stringify(ret.result.message) });
-            else if (ret.status == 'success') {
-                api.sendEvent({
-                    name: 'sendMsg',
-                    extra: {
-                        message: msg
-                    }
+                api.alert({
+                    title: '融云',
+                    msg: '初始化失败'
                 });
             }
 
-            else if (ret.status == 'error')
-                api.toast({ msg: err.code });
         });
     }
 </script>
+</body>
 </html>
