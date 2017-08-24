@@ -103,33 +103,18 @@
         }, function(ret, err) {
             /* 获取图片路径 */
             var url=ret.data;
-            var model = api.require('model');
-            model.uploadFile({
-                report: true,
-                data: {
-                    file: {
-                        name: 'add1.png',
-                        url: 'widget://image/add1.png'
-                    }
-                }
-            }, function(ret, err){
-                if( ret ){
-                    alert( JSON.stringify( ret ) );
-                }else{
-                    alert( JSON.stringify( err ) );
-                }
-            });
+            fnUploadPiture(url);
         })
     }
 
-    function fnUploadPiture() {
+    function fnUploadPiture(url) {
         var model=api.require("model");
         model.uploadFile({
             report: true,
             data: {
                 file: {
                     name: 'tx0.jpg',
-                    url: "widget://image/tx0.jpg"
+                    url: url
                 }
             }
         }, function(ret, err){
