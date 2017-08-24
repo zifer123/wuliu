@@ -11,44 +11,60 @@
             color: #fff;
             margin-bottom: 10px;
         }
+        #noavatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 40px;
+            margin: 10px auto;
+        }
+        .aui-list .aui-list-item-label, .aui-list .aui-list-item-label-icon {
+            width: 15%;
+        }
     </style>
 </head>
 <body>
 <div class="aui-content" style="background: #fff;">
     <ul class="aui-list aui-form-list">
         <li class="aui-list-item" style="border-bottom: 1px solid #ccc;">
+            <img src="../image/noavatar.gif" alt="" id="noavatar" onclick="fnGetPiture()">
+        </li>
+        <li class="aui-list-item" style="border-bottom: 1px solid #ccc;">
             <div class="aui-list-item-inner">
-                <div class="aui-list-item-label-icon">
-                    <i class="aui-iconfont aui-icon-my" style="color: #12B7F5;"></i>
+                <div class="aui-list-item-label">
+                    邮箱
                 </div>
                 <div class="aui-list-item-input">
-                    <input type="text" placeholder="注册邮箱">
+                    <input type="text" placeholder="邮箱">
                 </div>
             </div>
         </li>
 
         <li class="aui-list-item" style="border-bottom: 1px solid #ccc;">
             <div class="aui-list-item-inner">
-                <div class="aui-list-item-label-icon">
-                    <i class="aui-iconfont aui-icon-lock" style="color: #F9CC9D;"></i>
+                <div class="aui-list-item-label">
+                    昵称
                 </div>
                 <div class="aui-list-item-input">
-                    <input type="password" placeholder="密码">
-                </div>
-                <div class="aui-list-item-label-icon">
-                    <i class="aui-iconfont aui-icon-display"></i>
+                    <input type="text" placeholder="昵称">
                 </div>
             </div>
         </li>
 
-        <li class="aui-text-right aui-padded-l-5 aui-padded-r-5 aui-padded-t-5">
-            忘记密码？
+        <li class="aui-list-item" style="border-bottom: 1px solid #ccc;">
+            <div class="aui-list-item-inner">
+                <div class="aui-list-item-label">
+                    密码
+                </div>
+                <div class="aui-list-item-input">
+                    <input type="password" placeholder="密码">
+                </div>
+            </div>
         </li>
     </ul>
 
     <div class="aui-padded-15">
-        <div class="aui-btn aui-btn-info aui-btn-block">登录</div>
-        <div class="aui-btn aui-btn-default aui-btn-block" onclick="fnOpenRegisterFrame();">没有账号？马上注册</div>
+        <div class="aui-btn aui-btn-info aui-btn-block">注册</div>
+        <div class="aui-btn aui-btn-default aui-btn-block" onclick="fnOpenLoginFrame()">已有账号！直接登录</div>
     </div>
 </div>
 </body>
@@ -56,21 +72,99 @@
 <script type="text/javascript" src="../script/SHA1.js"></script>
 <script type="text/javascript">
     apiready = function(){
-
+        api.addEventListener({
+            name: 'keyback'
+        }, function (ret, err) {
+            alert(2);
+        });
     };
 
     /* 打开注册页面,执行window的fnOpenRegisterFrame方法 */
-    function fnOpenRegisterFrame() {
+    function fnOpenLoginFrame() {
         //在名为winName的window中执行jsfun脚本
         api.execScript({
             name: 'login_register',
-            script: "fnOpenRegisterFrame(1)"
+            script: "fnOpenRegisterFrame(0)"
+        });
+    }
+
+    /* 选择图片 */
+    function fnGetPiture() {
+        api.getPicture({
+            sourceType: 'library',
+            encodingType: 'jpg',
+            mediaValue: 'pic',
+            destinationType: 'url',
+            allowEdit: true,
+            quality: 50,
+            targetWidth: 100,
+            targetHeight: 100,
+            saveToPhotoAlbum: false
+        }, function(ret, err) {
+            /* 获取图片路径 */
+            var url=ret.data;
+            var model = api.require('model');
+            model.uploadFile({
+                report: true,
+                data: {
+                    file: {
+                        name: 'add1.png',
+                        url: 'widget://image/add1.png'
+                    }
+                }
+            }, function(ret, err){
+                if( ret ){
+                    alert( JSON.stringify( ret ) );
+                }else{
+                    alert( JSON.stringify( err ) );
+                }
+            });
+        })
+    }
+
+    function fnUploadPiture() {
+        var model=api.require("model");
+        model.uploadFile({
+            report: true,
+            data: {
+                file: {
+                    name: 'tx0.jpg',
+                    url: "widget://image/tx0.jpg"
+                }
+            }
+        }, function(ret, err){
+            if(ret) {
+                if(ret.state==0) {
+                    var strProgress=ret.progress+"%";
+                    api.showProgress({
+                        style: 'default',
+                        animationType: 'fade',
+                        title: '上传中...',
+                        text: strProgress,
+                        modal: false
+                    });
+                }else if(ret.state==1) {
+                    api.toast({
+                        msg: '上传成功'+JSON.stringify(ret),
+                        duration: 2000,
+                        location: 'bottom'
+                    });
+                    api.hideProgress();
+                }else {
+                    api.hideProgress();
+                    api.alert({
+                        msg: '上传失败，请重新上传'
+                    });
+                }
+            }else {
+                api.alert({
+                    title: '网络错误',
+                    msg: '请重新启动APP'
+                });
+            }
         });
     }
     
-
-
-
     function fnLogin() {
         var usermail=$api.val(document.getElementById("usermail"));
         var username=$api.val(document.getElementById("username"));
@@ -85,38 +179,36 @@
             username: username,
             password: password
         }, function(ret, err){
-           if(err) {
-               api.hideProgress();
-               api.alert({
-                   title: '温馨提示',
-                   msg: '账号或密码错误'
-               }, function (ret, err) {
+            if(err) {
+                api.hideProgress();
+                api.alert({
+                    title: '温馨提示',
+                    msg: '账号或密码错误'
+                });
+            }else {
+                api.hideProgress();
+                $api.setStorage('userId', ret.userId);
+                /* 成功之后用Id查询token */
+                var model = api.require("model");
+                model.findById({
+                    class: "user",
+                    id: ret.userId
+                }, function(ret, err){
+                    $api.setStorage('userToken', ret.token);
+                    $api.setStorage('username', ret.username);
 
-               });
-           }else {
-               api.hideProgress();
-               $api.setStorage('userId', ret.userId);
-               /* 成功之后用Id查询token */
-               var model = api.require("model");
-               model.findById({
-                   class: "user",
-                   id: ret.userId
-               }, function(ret, err){
-                   $api.setStorage('userToken', ret.token);
-                   $api.setStorage('username', ret.username);
-
-                   api.alert({
-                       title: '温馨提示',
-                       msg: '登录成功'
-                   }, function (ret, err) {
+                    api.alert({
+                        title: '温馨提示',
+                        msg: '登录成功'
+                    }, function (ret, err) {
                         /* 调到首页 */
-                       fnOpenSlidLayout();
-                   });
-               });
-           }
+                        fnOpenSlidLayout();
+                    });
+                });
+            }
         });
     }
-    
+
     function fnRegister() {
         var username=$api.val(document.getElementById("username"));
         var password=$api.val(document.getElementById("password"));

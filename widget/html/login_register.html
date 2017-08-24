@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0, minimum-scale=1.0, user-scalable=0, initial-scale=1.0, width=device-width"/>
+    <meta name="format-detection" content="telephone=no, email=no, date=no, address=no">
+    <title>Hello APP</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css" />
+    <style>
+        #header {
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            background: #12B7F5;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+<header id="header">登录</header>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+    apiready = function(){
+        var header=$api.byId("header");
+        var hh=$api.offset(header).h;
+
+        api.openFrameGroup({
+            name: 'login_register',
+            background: 'bgcolor',
+            scrollEnabled: false,
+            rect: {
+                x: 0,
+                y: hh,
+                w: 'auto',
+                h: 'auto'
+            },
+            index: 0,
+            frames: [{
+                name: 'login_frame',
+                url: './login_frame.html',
+                bgColor: '#fff'
+            }, {
+                name: 'register_frame',
+                url: './register_frame.html',
+                bgColor: '#fff'
+            }]
+        });
+
+        fnInitModel();
+    };
+
+    /* 初始化mcm应用信息，设置一次生效，为全局函数！ */
+    function fnInitModel() {
+        var model=api.require("model");
+        model.config({
+            appKey: '29762068-5EBD-FAE9-B326-0540B9F8E95E',
+            host: 'https://d.apicloud.com'
+        });
+    }
+
+    function fnOpenRegisterFrame(index) {
+        api.setFrameGroupIndex({
+            name: 'login_register',
+            index: index,
+            scroll: true
+        });
+    }
+</script>
+</html>

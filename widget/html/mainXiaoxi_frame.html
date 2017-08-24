@@ -55,21 +55,42 @@
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script type="text/javascript">
-    /* 监听收到消息 */
+
     apiready = function () {
-        apiready = function () {
-            api.addEventListener({
-                name: 'xiaoxiList'
-            }, function (ret, err) {
-                var text=ret.value.text;
-                var targetId=ret.value.targetId;
-                var type=ret.value.type;
-            });
-        }
+
+        /* 获取消息列表 */
+        var rong= api.require('rongCloud2');
+
+
+        /* 监听收到消息 */
+//        api.addEventListener({
+//            name: 'xiaoxiList'
+//        }, function (ret, err) {
+//            /* 获取历史消息 */
+//            var rong= api.require('rongCloud2');
+//            rong.getHistoryMessages({
+//                conversationType: 'PRIVATE',
+//                targetId: '110',
+//                oldestMessageId: -1,
+//                count: 20
+//            }, function(ret, err) {
+//                api.alert({
+//                    title: '历史',
+//                    msg: JSON.stringify(ret)
+//                })
+//            });
+//
+//            var text=ret.value.text;
+//            var targetId=ret.value.targetId;
+//            var type=ret.value.type;
+//            var receivedTime=ret.value.receivedTime;
+//            fnAppendList({text: text,targetId: targetId,type: type,receivedTime: receivedTime});
+//        });
     }
 
-    function fnAppendList() {
+    function fnAppendList(obj) {
         var auiList=$api.byId("auiList");
+        var time=formatDateTime(obj.receivedTime);
         $api.append(auiList, `
             <li class="aui-list-item aui-list-item-middle">
                 <div class="aui-media-list-item-inner">
@@ -78,11 +99,11 @@
                     </div>
                     <div class="aui-list-item-inner">
                         <div class="aui-list-item-text">
-                            <div class="aui-list-item-title aui-font-size-14">AUI</div>
-                            <div class="aui-list-item-right">08:00</div>
+                            <div class="aui-list-item-title aui-font-size-14">${obj.targetId}</div>
+                            <div class="aui-list-item-right">${time}</div>
                         </div>
                         <div class="aui-list-item-text">
-                            www.auicss.comwww.auicss.comwww.auicss.comwww.auicss.comwww.auicss.comwww.auicss.comwww.auicss.com
+                            ${obj.text}
                             <div class="aui-dot"></div>
                         </div>
                     </div>
@@ -90,4 +111,21 @@
             </li>
         `);
     }
+
+    function formatDateTime(timeStamp) {
+        var date = new Date();
+        date.setTime(timeStamp);
+        var y = date.getFullYear();
+        var m = date.getMonth() + 1;
+        m = m < 10 ? ('0' + m) : m;
+        var d = date.getDate();
+        d = d < 10 ? ('0' + d) : d;
+        var h = date.getHours();
+        h = h < 10 ? ('0' + h) : h;
+        var minute = date.getMinutes();
+        var second = date.getSeconds();
+        minute = minute < 10 ? ('0' + minute) : minute;
+        second = second < 10 ? ('0' + second) : second;
+        return y + '-' + m + '-' + d+' '+h+':'+minute+':'+second;
+    };
 </script>
