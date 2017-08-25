@@ -27,6 +27,7 @@
     <ul class="aui-list aui-form-list">
         <li class="aui-list-item" style="border-bottom: 1px solid #ccc;">
             <img src="../image/noavatar.gif" alt="" id="noavatar" onclick="fnGetPiture()">
+            <input type="hidden" id="fileUrl" />
         </li>
         <li class="aui-list-item" style="border-bottom: 1px solid #ccc;">
             <div class="aui-list-item-inner">
@@ -34,7 +35,7 @@
                     邮箱
                 </div>
                 <div class="aui-list-item-input">
-                    <input type="text" placeholder="邮箱">
+                    <input type="email" placeholder="邮箱" id="usermail">
                 </div>
             </div>
         </li>
@@ -45,7 +46,7 @@
                     昵称
                 </div>
                 <div class="aui-list-item-input">
-                    <input type="text" placeholder="昵称">
+                    <input type="text" placeholder="昵称" id="username">
                 </div>
             </div>
         </li>
@@ -56,14 +57,14 @@
                     密码
                 </div>
                 <div class="aui-list-item-input">
-                    <input type="password" placeholder="密码">
+                    <input type="password" placeholder="密码" id="password">
                 </div>
             </div>
         </li>
     </ul>
 
     <div class="aui-padded-15">
-        <div class="aui-btn aui-btn-info aui-btn-block">注册</div>
+        <div class="aui-btn aui-btn-info aui-btn-block" onclick="fnRegister();">注册</div>
         <div class="aui-btn aui-btn-default aui-btn-block" onclick="fnOpenLoginFrame()">已有账号！直接登录</div>
     </div>
 </div>
@@ -96,25 +97,27 @@
             mediaValue: 'pic',
             destinationType: 'url',
             allowEdit: true,
-            quality: 50,
+            quality: 100,
             targetWidth: 100,
             targetHeight: 100,
             saveToPhotoAlbum: false
         }, function(ret, err) {
-            /* 获取图片路径 */
+            /* 获取图片路径，并且把路劲存在隐藏的input里 */
             var url=ret.data;
-            fnUploadPiture(url);
+            $api.attr($api.byId("noavatar"), 'src', url);
+            $api.val($api.byId('fileUrl'), url);
         })
     }
 
-    function fnUploadPiture(url) {
+    /* 此处操作为: 所有验证成功，需要传入头像url和处理注册的回调函数 */
+    function fnUploadPiture(userInfo,callback) {
         var model=api.require("model");
         model.uploadFile({
             report: true,
             data: {
                 file: {
                     name: 'tx0.jpg',
-                    url: url
+                    url: userInfo.fileUrl
                 }
             }
         }, function(ret, err){
@@ -124,16 +127,24 @@
                     api.showProgress({
                         style: 'default',
                         animationType: 'fade',
-                        title: '上传中...',
+                        title: '头像上传中...',
                         text: strProgress,
                         modal: false
                     });
                 }else if(ret.state==1) {
                     api.toast({
-                        msg: '上传成功'+JSON.stringify(ret),
+                        msg: '上传成功',
                         duration: 2000,
                         location: 'bottom'
                     });
+                    /* 获取到图片路径 */
+                    var url=ret.body.url;
+                    /* 获取到ID，*/
+                    var id=ret.body.id;
+                    userInfo.fileUrl=url;
+                    userInfo.fileId=id;
+
+                    callback(userInfo);
                     api.hideProgress();
                 }else {
                     api.hideProgress();
@@ -149,66 +160,54 @@
             }
         });
     }
-    
-    function fnLogin() {
-        var usermail=$api.val(document.getElementById("usermail"));
-        var username=$api.val(document.getElementById("username"));
-        var password=$api.val(document.getElementById("password"));
+
+    function fnRegister() {
+        var usermail= $api.trim($api.val(document.getElementById("usermail")));
+        var username=$api.trim($api.val(document.getElementById("username")));
+        var password=$api.trim($api.val(document.getElementById("password")));
+        var fileUrl=$api.val(document.getElementById("fileUrl"));
+
+        var userInfo={
+            usermail: usermail,
+            fileUrl: fileUrl,
+            username: username,
+            password: password
+        };
+        /* 验证 */
+        if(fnCheckUserInfo(userInfo)) {
+            return;
+        }
+
+
         api.showProgress({
             title: '努力加载中...',
             text: '先喝杯茶...',
             modal: true
         });
-        var user = api.require("user");
-        user.login({
-            username: username,
-            password: password
-        }, function(ret, err){
-            if(err) {
-                api.hideProgress();
-                api.alert({
-                    title: '温馨提示',
-                    msg: '账号或密码错误'
-                });
-            }else {
-                api.hideProgress();
-                $api.setStorage('userId', ret.userId);
-                /* 成功之后用Id查询token */
-                var model = api.require("model");
-                model.findById({
-                    class: "user",
-                    id: ret.userId
-                }, function(ret, err){
-                    $api.setStorage('userToken', ret.token);
-                    $api.setStorage('username', ret.username);
 
-                    api.alert({
-                        title: '温馨提示',
-                        msg: '登录成功'
-                    }, function (ret, err) {
-                        /* 调到首页 */
-                        fnOpenSlidLayout();
-                    });
+        /* 使用user对象判断是否注册过，防止在file表上传一个不必要的图片,并且防止了在融云注册一个不必要的token */
+        /* 邮箱注册过 */
+        var user = api.require('user');
+        user.login({
+            username: userInfo.usermail,
+            password: userInfo.password
+        }, function( ret, err ) {
+            if( ret ){
+                api.hideProgress();
+                api.toast({
+                    msg: '账户已注册过！请登录',
+                    duration: 2000,
+                    location: 'center'
                 });
+                return;
+            }else {
+                fnGetToken(userInfo,fnIsRegister);
             }
         });
     }
 
-    function fnRegister() {
-        var username=$api.val(document.getElementById("username"));
-        var password=$api.val(document.getElementById("password"));
-
-        api.showProgress({
-            title: '努力加载中...',
-            text: '先喝杯茶...',
-            modal: true
-        });
-
-        fnGetToken(username,password,fnIsRegister);
-    }
-
     /* 获取token */
-    function fnGetToken(username,password,callback) {
+    function fnGetToken(userInfo) {
         var now = parseInt(Date.now()/1000);
         var rand=Math.ceil(Math.random()*10000000);
         var aKey="k51hidwqk9iab";   //融云注册申请
@@ -230,54 +229,68 @@
             returnAll: false,
             data: {
                 values: {
-                    userId: username,
-                    name: "1"
+                    userId: userInfo.usermail,
+                    name: userInfo.username,
+                    portraitUri: userInfo.fileUrl
                 }
             }
         }, function (ret, err) {
-            callback?callback(ret,username,password):"";
+            if(ret) {
+                /* 拿到token之后，开始上传头像 */
+                userInfo.token=ret.token;
+                fnUploadPiture(userInfo,fnIsRegister)
+            }else {
+                api.toast({
+                    msg: '网络连接错误',
+                    duration: 2000,
+                    location: 'bottom'
+                });
+            }
         })
     }
 
     /* 判断用户注册 */
-    function fnIsRegister(ret,username,password) {
+    function fnIsRegister(userInfo) {
         /* 返回的ret有两种结果："" 或json*/
-        if(ret) {
-            var model = api.require('model');
-            model.insert({
-                class: "user",
-                value: {
-                    "username": username,
-                    "password": password,
-                    "token": ret.token
-                }
-            }, function(ret, err){
-                /* 判断是否注册过 */
-                api.hideProgress();
-                if(ret.error) {
-                    api.toast({
-                        msg: "账号已注册过,请登录",
-                        duration: 2000,
-                        location: 'bottom'
-                    });
-                }else {
-                    /* 成功之后拿到生成id去融云拿到唯一的token */
-                    api.alert({
-                        title: '温馨提示',
-                        msg: '注册成功，点击登录按钮登录'
-                    }, function (ret, err) {
-
-                    });
-                }
-            });
-        }else {
+        var model = api.require('model');
+        model.insert({
+            class: "user",
+            value: {
+                "username": userInfo.usermail,
+                "password": userInfo.password,
+                "nicheng": userInfo.username,
+                "email": userInfo.usermail,
+                "fileId": userInfo.fileId,
+                "fileUrl": userInfo.fileUrl,
+                "token": userInfo.token
+            }
+        }, function(ret, err){
+            /* 判断是否注册过 */
             api.hideProgress();
-            api.alert({
-                title: '温馨提示',
-                msg: "token获取失败"
-            });
-        }
-    }
+            if(ret.error) {
+                api.toast({
+                    msg: "账号已注册过,请登录",
+                    duration: 2000,
+                    location: 'bottom'
+                });
+            }else {
+                /* 成功之后拿到生成id去融云拿到唯一的token */
+                api.alert({
+                    title: '温馨提示',
+                    msg: '注册成功'
+                }, function (ret, err) {
+                    // 发送事件，让login_frame的邮箱值等于注册值
+                    api.sendEvent({
+                        name: 'login_email',
+                        extra: {
+                            login_email: userInfo.usermail
+                        }
+                    });
+                    fnOpenLoginFrame(0);
+                });
+            }
+        });
+}
 
     function fnOpenSlidLayout() {
         api.openSlidLayout({
@@ -294,6 +307,47 @@
         }, function(ret, err) {
 
         });
+    }
+
+    /* 验证 */
+    function fnCheckUserInfo(userInfo) {
+        var usermail=userInfo.usermail;
+        var username=userInfo.username;
+        var password=userInfo.password;
+        var fileUrl=userInfo.fileUrl;
+        /* 此处所有变量取自父函数定义 */
+        if(!fileUrl) {
+            api.toast({
+                msg: '请选择头像',
+                duration: 2000,
+                location: 'center'
+            });
+            return true;
+        }
+        if(!usermail||!username||!password) {
+            api.toast({
+                msg: '请完善信息',
+                duration: 2000,
+                location: 'center'
+            });
+            return true;
+        }
+        if(!/^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/.test(usermail)) {
+            api.toast({
+                msg: '请输入正确的邮箱格式',
+                duration: 2000,
+                location: 'center'
+            });
+            return true;
+        }
+        if(!/^[A-Za-z0-9]{6,20}$/.test(password)) {
+            api.toast({
+                msg: '请输入6-20数字与字母组合的密码',
+                duration: 2000,
+                location: 'center'
+            });
+            return true;
+        }
     }
 
 </script>

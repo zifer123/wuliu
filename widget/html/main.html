@@ -9,6 +9,7 @@
 	<style>
         .tx {
             width: 38px;
+            height: 38px;
             border-radius: 50%;
         }
 	</style>
@@ -16,8 +17,7 @@
 <body>
 <header class="aui-bar aui-bar-nav" id="header">
     <a class="aui-pull-left aui-btn" onclick="fnOpenSlidPane();">
-        <img src="../image/tx0.jpg" class="tx" alt="">
-        <!--32-->
+        <i class="aui-iconfont aui-icon-my"></i>
     </a>
     <div class="aui-title">消息</div>
     <a class="aui-pull-right aui-btn">
@@ -43,9 +43,10 @@
 </footer>
 <script type="text/javascript" src="../script/api.js"></script>
 <script type="text/javascript">
+    $api.attr($api.byId("noavatar"), 'src', $api.getStorage("fileUrl"));
     apiready = function () {
         var header=$api.byId("header")
-        $api.fixStatusBar(header);
+//        $api.fixStatusBar(header);
         var footer= $api.byId('footer');
         var hh=$api.offset(header).h;// 顶部导航高
         var fh=$api.offset(footer).h;// 底部导航高
@@ -53,7 +54,7 @@
         var rong = api.require('rongCloud2');
         fnInitRong2(rong);
         fnOpenMainXiaoxiFrame(hh,fh);
-    }
+    };
 
     function fnOpenMainFrame(hh,fh) {
         api.openFrame({
@@ -118,13 +119,15 @@
                 });
 
                 /* 获取token */
-                var token=$api.getStorage("userToken");
+                var token=$api.getStorage("token");
                 rong.connect({token: token},function(ret, err) {
                     if (ret.status == 'success') {
                         api.alert({
                             title: '融云连接',
                             msg: "您的ID为"+ret.result.userId
                         });
+                        /* 连接成功获取会话列表 */
+
                     }
                 });
             }else {
@@ -134,6 +137,20 @@
                 });
             }
 
+        });
+    }
+
+    function fnGet() {
+        rong.getConversationList({
+            conversationType: 'PRIVATE',
+            targetId: '110',
+            oldestMessageId: -1,
+            count: 20
+        }, function(ret, err) {
+            api.alert({
+                title: '历史',
+                msg: JSON.stringify(ret)
+            })
         });
     }
 </script>

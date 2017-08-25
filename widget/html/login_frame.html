@@ -22,7 +22,7 @@
                     <i class="aui-iconfont aui-icon-my" style="color: #12B7F5;"></i>
                 </div>
                 <div class="aui-list-item-input">
-                    <input type="text" placeholder="注册邮箱">
+                    <input type="text" id="login_email" placeholder="注册邮箱">
                 </div>
             </div>
         </li>
@@ -33,7 +33,7 @@
                     <i class="aui-iconfont aui-icon-lock" style="color: #F9CC9D;"></i>
                 </div>
                 <div class="aui-list-item-input">
-                    <input type="password" placeholder="密码">
+                    <input type="password" id="login_password" placeholder="密码">
                 </div>
                 <div class="aui-list-item-label-icon">
                     <i class="aui-iconfont aui-icon-display"></i>
@@ -47,7 +47,7 @@
     </ul>
 
     <div class="aui-padded-15">
-        <div class="aui-btn aui-btn-info aui-btn-block">登录</div>
+        <div class="aui-btn aui-btn-info aui-btn-block" onclick="fnLogin();">登录</div>
         <div class="aui-btn aui-btn-default aui-btn-block" onclick="fnOpenRegisterFrame();">没有账号？马上注册</div>
     </div>
 </div>
@@ -56,7 +56,11 @@
 <script type="text/javascript" src="../script/SHA1.js"></script>
 <script type="text/javascript">
     apiready = function(){
-
+        api.addEventListener({
+            name: 'login_email'
+        }, function (ret, err) {
+            $api.val($api.byId("login_email"), ret.value.login_email);
+        });
     };
 
     /* 打开注册页面,执行window的fnOpenRegisterFrame方法 */
@@ -72,9 +76,8 @@
 
 
     function fnLogin() {
-        var usermail=$api.val(document.getElementById("usermail"));
-        var username=$api.val(document.getElementById("username"));
-        var password=$api.val(document.getElementById("password"));
+        var usermail=$api.val(document.getElementById("login_email"));
+        var password=$api.val(document.getElementById("login_password"));
         api.showProgress({
             title: '努力加载中...',
             text: '先喝杯茶...',
@@ -82,7 +85,7 @@
         });
         var user = api.require("user");
         user.login({
-            username: username,
+            username: usermail,
             password: password
         }, function(ret, err){
            if(err) {
@@ -94,6 +97,7 @@
 
                });
            }else {
+               alert(JSON.stringify(ret));
                api.hideProgress();
                $api.setStorage('userId', ret.userId);
                /* 成功之后用Id查询token */
@@ -102,8 +106,9 @@
                    class: "user",
                    id: ret.userId
                }, function(ret, err){
-                   $api.setStorage('userToken', ret.token);
+                   $api.setStorage('token', ret.token);
                    $api.setStorage('username', ret.username);
+                   $api.setStorage('fileUrl', ret.fileUrl);
 
                    api.alert({
                        title: '温馨提示',
@@ -116,91 +121,6 @@
            }
         });
     }
-    
-    function fnRegister() {
-        var username=$api.val(document.getElementById("username"));
-        var password=$api.val(document.getElementById("password"));
-
-        api.showProgress({
-            title: '努力加载中...',
-            text: '先喝杯茶...',
-            modal: true
-        });
-
-        fnGetToken(username,password,fnIsRegister);
-    }
-
-    /* 获取token */
-    function fnGetToken(username,password,callback) {
-        var now = parseInt(Date.now()/1000);
-        var rand=Math.ceil(Math.random()*10000000);
-        var aKey="k51hidwqk9iab";   //融云注册申请
-        var sKey="dirfMCDi0Ar2";//融云注册申请
-        var appKey = SHA1(sKey + "" + rand + "" + now) ;
-
-        api.ajax({
-            url: 'http://api.cn.ronghub.com/user/getToken.json',
-            method: 'post',
-            headers: {
-                "App-Key" : aKey,
-                "Nonce" : rand,
-                "Timestamp" : now,
-                "Signature" : appKey,
-                "Content-Type" : "application/x-www-form-urlencoded"
-            },
-            timeout: 30,
-            dataType: 'json',
-            returnAll: false,
-            data: {
-                values: {
-                    userId: username,
-                    name: "1"
-                }
-            }
-        }, function (ret, err) {
-            callback?callback(ret,username,password):"";
-        })
-    }
-
-    /* 判断用户注册 */
-    function fnIsRegister(ret,username,password) {
-        /* 返回的ret有两种结果："" 或json*/
-        if(ret) {
-            var model = api.require('model');
-            model.insert({
-                class: "user",
-                value: {
-                    "username": username,
-                    "password": password,
-                    "token": ret.token
-                }
-            }, function(ret, err){
-                /* 判断是否注册过 */
-                api.hideProgress();
-                if(ret.error) {
-                    api.toast({
-                        msg: "账号已注册过,请登录",
-                        duration: 2000,
-                        location: 'bottom'
-                    });
-                }else {
-                    /* 成功之后拿到生成id去融云拿到唯一的token */
-                    api.alert({
-                        title: '温馨提示',
-                        msg: '注册成功，点击登录按钮登录'
-                    }, function (ret, err) {
-
-                    });
-                }
-            });
-        }else {
-            api.hideProgress();
-            api.alert({
-                title: '温馨提示',
-                msg: "token获取失败"
-            });
-        }
-    }
 
     function fnOpenSlidLayout() {
         api.openSlidLayout({
@@ -212,7 +132,8 @@
             },
             slidPane: {
                 name: 'main',
-                url: 'widget://html/main.html'
+                url: 'widget://html/main.html',
+                bounces: true
             }
         }, function(ret, err) {
 
