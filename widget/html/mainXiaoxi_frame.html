@@ -67,7 +67,6 @@
             name: 'getConversationList'
         }, function (ret, err) {
             var result=ret.value.result;
-            alert(JSON.stringify(result));
             var html="";
             for(var i in result) {
                 var sendTime=formatDateTime(result[i].sentTime);
@@ -169,7 +168,6 @@
 
     /* 打开会话页面 */
     function fnOpenChat(targetId) {
-        alert(targetId);
         api.openWin({
             name: 'chat',
             url: './chat.html',
