@@ -34,22 +34,7 @@
                 </div>
             </div>
         </li>
-        <li class="aui-list-item aui-list-item-middle">
-            <div class="aui-media-list-item-inner">
-                <div class="aui-list-item-media" style="width: 3rem;">
-                    <img src="../image/tx8.jpg" class="aui-img-round aui-list-img-sm">
-                </div>
-                <div class="aui-list-item-inner">
-                    <div class="aui-list-item-text">
-                        <div class="aui-list-item-title aui-font-size-14">AUI</div>
-                        <div class="aui-list-item-right">08:00</div>
-                    </div>
-                    <div class="aui-list-item-text">
-                        www.auicss.com
-                    </div>
-                </div>
-            </div>
-        </li>
+
     </ul>
 </div>
 </body>
@@ -75,6 +60,69 @@
             var type=ret.value.type;
             var receivedTime=ret.value.receivedTime;
             fnAppendList({text: text,targetId: targetId,type: type,receivedTime: receivedTime});
+        });
+
+        /* 初始化会话列表 */
+        api.addEventListener({
+            name: 'getConversationList'
+        }, function (ret, err) {
+            var result=ret.value.result;
+            alert(JSON.stringify(result));
+            var html="";
+            for(var i in result) {
+                var sendTime=formatDateTime(result[i].sentTime);
+                html+=`
+                <li id="target-${result[i].targetId}" class="aui-list-item aui-list-item-middle" tapmode onclick="fnOpenChat('${result[i].targetId}')">
+                    <div class="aui-media-list-item-inner">
+                        <div class="aui-list-item-media" style="width: 3rem;">
+                            <img id="avatar-${result[i].targetId}" src="../image/tx0.jpg" class="aui-img-round aui-list-img-sm">
+                        </div>
+                        <div class="aui-list-item-inner">
+                            <div class="aui-list-item-text">
+                                <div class="aui-list-item-title aui-font-size-14">${result[i].targetId}</div>
+                                <div class="aui-list-item-right">${sendTime}</div>
+                            </div>
+                            `;
+                switch(result[i].objectName){
+                    //文字消息
+                    case 'RC:TxtMsg':
+                        html+=`<div class="aui-list-item-text">
+                                   ${result[i].latestMessage.text}
+                               </div>
+                               `;
+                        break;
+                    //图片消息
+                    case 'RC:ImgMsg':
+                        html+=`<div class="aui-list-item-text">
+                                   [图片]
+                               </div>
+                               `;
+                        break;
+                    //语音消息
+                    case 'RC:VcMsg':
+                        html+=`<div class="aui-list-item-text">
+                                   [语音]
+                               </div>
+                               `;
+                        break;
+                    //图文消息
+                    case 'RC:ImgTextMsg':
+                        html+=`<div class="aui-list-item-text">
+                                   [图文]
+                               </div>
+                               `;
+                        break;
+                    //位置消息
+                    case 'RC:LBSMsg':
+                        html+=`<div class="aui-list-item-text">
+                                   [位置]
+                               </div>
+                               `;
+                        break;
+                }
+                html+=`</div></div></li>`;
+                $api.html($api.byId("auiList"), html);
+            }
         });
     };
 
@@ -118,4 +166,16 @@
         second = second < 10 ? ('0' + second) : second;
         return y + '-' + m + '-' + d+' '+h+':'+minute+':'+second;
     };
+
+    /* 打开会话页面 */
+    function fnOpenChat(targetId) {
+        alert(targetId);
+        api.openWin({
+            name: 'chat',
+            url: './chat.html',
+            pageParam: {
+                targetId: targetId
+            }
+        });
+    }
 </script>

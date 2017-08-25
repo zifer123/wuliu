@@ -127,7 +127,7 @@
                             msg: "您的ID为"+ret.result.userId
                         });
                         /* 连接成功获取会话列表 */
-
+                        fnGetConversationList(rong);
                     }
                 });
             }else {
@@ -140,18 +140,19 @@
         });
     }
 
-    function fnGet() {
-        rong.getConversationList({
-            conversationType: 'PRIVATE',
-            targetId: '110',
-            oldestMessageId: -1,
-            count: 20
-        }, function(ret, err) {
-            api.alert({
-                title: '历史',
-                msg: JSON.stringify(ret)
-            })
-        });
+    /* 获取回话列表 */
+    function fnGetConversationList(rong) {
+        rong.getConversationList(function(ret, err) {
+            if(ret.status=="success") {
+                api.sendEvent({
+                    name: 'getConversationList',
+                    extra: {
+                        result: ret.result
+                    }
+                });
+            }
+        })
+
     }
 </script>
 </body>
